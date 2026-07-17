@@ -1,5 +1,16 @@
 @import "tailwindcss";
 
+@font-face {
+  font-family: "DaggerSquare";
+  src: url("/fonts/DAGGERSQUARE.otf") format("opentype");
+}
+
+@font-face {
+  font-family: "DaggerSquare";
+  src: url("/fonts/DAGGERSQUARE OBLIQUE.otf") format("opentype");
+  font-style: italic;
+}
+
 :root {
   --background: #ffffff;
   --foreground: #171717;
@@ -10,6 +21,7 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --font-dagger: "DaggerSquare", sans-serif;
 }
 
 @media (prefers-color-scheme: dark) {
