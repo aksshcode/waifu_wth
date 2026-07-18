@@ -82,7 +82,7 @@ export default function Home() {
           className="relative rounded-xl overflow-clip w-[85vw] max-w-[450px] aspect-[9/16]">
           {fetchStatus === "loading" ? <ImageSkeleton /> :
             <Image
-              src={'https://picsum.photos/seed/picsum/200/300'}
+              src={imageData?.url ?? 'https://picsum.photos/seed/picsum/200/300'}
               alt="waifu image" fill className="object-cover" priority unoptimized />
           }
           <div className="inset-0 absolute bg-linear-to-t from-black to-transparent" />
