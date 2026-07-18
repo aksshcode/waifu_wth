@@ -54,7 +54,7 @@ export default function Home() {
     }
   }
   return (
-    <div className="w-full h-screen flex-1 flex flex-col justify-center items-center ">
+    <div className="w-full h-screen flex-1 flex flex-col justify-center p-4 items-center ">
       <div className="flex flex-col gap-4">
         <motion.div
           key={imageData?.url ?? "loading"}
@@ -79,7 +79,7 @@ export default function Home() {
             }
           }}
           dragSnapToOrigin={!swipeDirection}
-          className="relative rounded-xl overflow-clip w-[450px] aspect-[9/16]">
+          className="relative rounded-xl overflow-clip w-[85vw] max-w-[450px] aspect-[9/16]">
           {fetchStatus === "loading" ? <ImageSkeleton /> :
             <Image
               src={'https://picsum.photos/seed/picsum/200/300'}
@@ -106,7 +106,7 @@ export default function Home() {
 function ImageSkeleton() {
   return (
     <div
-      className="w-full h-full bg-[#0a0a0a] rounded-xl scale-110"
+      className="w-full h-full bg-[#0a0a0a] rounded-xl"
     >
       <Spinner data-icon="inline-start" />
     </div>
