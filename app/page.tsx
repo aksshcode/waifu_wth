@@ -10,9 +10,7 @@ const cards = [
   { "url": "https://nekos.best/api/v2/waifu/bb289ba3-1593-4b06-92eb-1b117f25fe44.png", "artist": "Shotz" },
   { "url": "https://nekos.best/api/v2/waifu/6cf56c32-9c77-4640-853c-7225e9daa7dc.png", "artist": "TELU" },
   { "url": "https://nekos.best/api/v2/waifu/e3b31722-95c1-4e3f-8d58-3ad67d4e6c54.png", "artist": "Rudae" },
-  { "url": "https://nekos.best/api/v2/waifu/934b4a77-2290-45a1-98ca-e777759deccf.png", "artist": "とぴあ" },
-  { "url": "https://nekos.best/api/v2/waifu/28cafa23-479a-44b2-9ffa-2ca36cadae22.png", "artist": "TorinoAqua" },
-  { "url": "https://nekos.best/api/v2/waifu/95412222-64e4-493d-a9dc-73f5a0546ac8.png", "artist": "北乃ゆきと" },
+  { "url": "https://nekos.best/api/v2/waifu/934b4a77-2290-45a1-98ca-e777759deccf.png", "artist": "とぴあ" }, { "url": "https://nekos.best/api/v2/waifu/28cafa23-479a-44b2-9ffa-2ca36cadae22.png", "artist": "TorinoAqua" }, { "url": "https://nekos.best/api/v2/waifu/95412222-64e4-493d-a9dc-73f5a0546ac8.png", "artist": "北乃ゆきと" },
   { "url": "https://nekos.best/api/v2/waifu/3726a151-f8fe-4a69-abaf-7272e4037829.png", "artist": "oshioshio_info" },
   { "url": "https://nekos.best/api/v2/waifu/63b571f4-a198-4460-b476-23c3edf02a14.png", "artist": "なきょ" },
   { "url": "https://nekos.best/api/v2/waifu/968dc6da-e2fb-49ff-ad0d-49e6ad73e967.png", "artist": "riannu" },
@@ -29,11 +27,11 @@ export default function Home() {
 
       <section className="mx-auto flex sm:max-w-5xl  flex-col px-10 pt-40 p-24 max-w-xl">
         <span className="text-6xl font-black tracking-tight">
-          who needs '' when you have '' ?
+          who needs girls when you have waifus?
         </span>
 
         <span className="mt-3 text-xl text-neutral-400">
-          Swipe forever. Discover new art every time.
+          Swipe forever. Discover smth new ,every time.
         </span>
 
         <Link href={'/swipe'}>
