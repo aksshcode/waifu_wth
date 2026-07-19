@@ -1,132 +1,82 @@
 'use client'
-import Image from "next/image"
-import { useEffect, useState } from "react"
-import { motion } from "motion/react"
-import { Spinner } from "@/components/ui/spinner"
 import { Button } from "@/components/ui/button"
-import { ArrowLeft, ArrowRight } from "lucide-react"
+import Image from "next/image"
+import Link from "next/link"
+import { motion } from "motion/react"
+
+const cards = [
+  { "url": "https://nekos.best/api/v2/waifu/b74529e0-2e8b-4652-80f8-d4aace4e1b32.png", "artist": "Shinka" },
+  { "url": "https://nekos.best/api/v2/waifu/a81999e9-292e-4a29-b048-a1311830d774.png", "artist": "華葡。" },
+  { "url": "https://nekos.best/api/v2/waifu/bb289ba3-1593-4b06-92eb-1b117f25fe44.png", "artist": "Shotz" },
+  { "url": "https://nekos.best/api/v2/waifu/6cf56c32-9c77-4640-853c-7225e9daa7dc.png", "artist": "TELU" },
+  { "url": "https://nekos.best/api/v2/waifu/e3b31722-95c1-4e3f-8d58-3ad67d4e6c54.png", "artist": "Rudae" },
+  { "url": "https://nekos.best/api/v2/waifu/934b4a77-2290-45a1-98ca-e777759deccf.png", "artist": "とぴあ" },
+  { "url": "https://nekos.best/api/v2/waifu/28cafa23-479a-44b2-9ffa-2ca36cadae22.png", "artist": "TorinoAqua" },
+  { "url": "https://nekos.best/api/v2/waifu/95412222-64e4-493d-a9dc-73f5a0546ac8.png", "artist": "北乃ゆきと" },
+  { "url": "https://nekos.best/api/v2/waifu/3726a151-f8fe-4a69-abaf-7272e4037829.png", "artist": "oshioshio_info" },
+  { "url": "https://nekos.best/api/v2/waifu/63b571f4-a198-4460-b476-23c3edf02a14.png", "artist": "なきょ" },
+  { "url": "https://nekos.best/api/v2/waifu/968dc6da-e2fb-49ff-ad0d-49e6ad73e967.png", "artist": "riannu" },
+  { "url": "https://nekos.best/api/v2/waifu/955f6299-aaac-4489-8695-6a4808210b53.png", "artist": "かがちさく" },
+  { "url": "https://nekos.best/api/v2/waifu/e9b95142-3ae2-46cc-a922-e286d8f53d3c.png", "artist": "おゆわり" },
+  { "url": "https://nekos.best/api/v2/waifu/558bea27-e157-40cc-a2d8-ef71eea4468a.png", "artist": "E20" },
+  { "url": "https://nekos.best/api/v2/waifu/bb51637f-9c9a-453f-963d-711359d5e287.png", "artist": "JsnGoat" },
+]
 
 export default function Home() {
-  type WaifuData = {
-    results: {
-      artist_name: string
-      artist_href: string
-      source_url: string
-      url: string
-      dimensions: { width: number; height: number }
-    }[]
-  }
-  const [fetchStatus, setFetchStatus] = useState<"success" | "loading" | "failed">("loading")
-  const [imgData, setImgData] = useState<WaifuData>()
-  const [nextImgData, setNextImgData] = useState<WaifuData>()
-  const imageData = imgData?.results[0]
-  const imageName = imageData?.artist_name ?? "loading"
-  async function getImgData(fromSwipe?: boolean) {
-    try {
-      const res = await fetch('https://nekos.best/api/v2/waifu')
-      const data = await res.json()
-      setImgData(data)
-      setSwipeDirection(null)
-      setFetchStatus("success")
-      if (fromSwipe) setSwipeKey(prev => prev + 1)
-    } catch {
-      setSwipeDirection(null)
-      setFetchStatus("failed")
-    }
-  }
-  async function getNextImgData(fromSwipe?: boolean) {
-    try {
-      const res = await fetch('https://nekos.best/api/v2/waifu')
-      const data = await res.json()
-      setNextImgData(data)
-      setImgData(prev => prev ?? data)
-      setSwipeDirection(null)
-      // setSwipeKey(prev => prev + 1)
-    } catch {
-      // fail silently
-    }
-  }
-  const [swipeDirection, setSwipeDirection] = useState<"left" | "right" | null>(null)
-  useEffect(() => {
-    getImgData()
-    getNextImgData()
-    function handleKey(e: KeyboardEvent) {
-      if (e.key === "ArrowLeft") swipeLeft()
-      if (e.key === "ArrowRight") swipeRight()
-    }
-    window.addEventListener("keydown", handleKey)
-    return () => window.removeEventListener("keydown", handleKey)
-  }, [])
-  const [swipeKey, setSwipeKey] = useState<number>(0)
-  function swipeLeft() {
-    if (!swipeDirection) {
-      setSwipeDirection("left")
-    }
-  }
-  function swipeRight() {
-    if (!swipeDirection) {
-      setSwipeDirection("right")
-    }
-  }
   return (
-    <div className="w-full h-screen flex-1 flex flex-col justify-center p-4 items-center ">
-      <div className="flex flex-col gap-4">
+    <main className="min-h-screen bg-neutral-950 text-white">
+      <Header />
+
+      <section className="mx-auto flex sm:max-w-5xl  flex-col px-10 pt-40 p-24 max-w-xl">
+        <span className="text-6xl font-black tracking-tight">
+          who needs '' when you have '' ?
+        </span>
+
+        <span className="mt-3 text-xl text-neutral-400">
+          Swipe forever. Discover new art every time.
+        </span>
+
+        <Link href={'/swipe'}>
+          <Button className="mt-8 w-fit">
+            Start swiping
+          </Button>
+        </Link>
+      </section>
+
+      <div className="overflow-hidden py-10">
         <motion.div
-          key={swipeKey}
-          initial={{ filter: "blur(2px)", scale: 0.25, opacity: 0 }}
-          animate={
-            swipeDirection === "right"
-              ? { filter: "blur(0px)", scale: 1, opacity: 0, x: 600 }
-              : swipeDirection === "left"
-                ? { filter: "blur(0px)", scale: 1, opacity: 0, x: -600 }
-                : { filter: "blur(0px)", scale: 1, opacity: 1, x: 0 }
-          }
-          transition={{ x: { duration: 0.15 }, opacity: { duration: 0.15 } }}
-          drag="x"
-          onDragEnd={(_, info) => {
-            if (info.offset.x > 100) setSwipeDirection("right")
-            else if (info.offset.x < -100) setSwipeDirection("left")
-            else setSwipeDirection(null)
-          }}
-          onAnimationComplete={() => {
-            if (swipeDirection) {
-              setImgData(nextImgData)
-              getNextImgData()
-              setSwipeKey(prev => prev + 1)
-              setSwipeDirection(null)
-            }
-          }}
-          dragSnapToOrigin={!swipeDirection}
-          className="relative rounded-xl overflow-clip w-[85vw] max-w-[450px] aspect-[9/16]">
-          {fetchStatus === "loading" ? <ImageSkeleton /> :
-            <Image
-              src={imageData?.url ?? 'https://picsum.photos/seed/picsum/200/300'}
-              alt="waifu image" fill className="object-cover" priority unoptimized />
-          }
-          <div className="inset-0 absolute bg-linear-to-t from-black to-transparent" />
-          <div className="absolute bottom-0 left-0 m-5">
-            {imageName}
-          </div>
-        </motion.div>
-        <motion.div
-          initial={{ filter: "blur(2px)", x: -10, opacity: 0 }}
-          animate={{ filter: "blur(0px)", x: 0, opacity: 1 }}
-          className="w-full flex-row flex"
+          className="flex gap-4"
+          animate={{ x: ["0%", "-50%"] }}
+          transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
         >
-          <Button onClick={swipeLeft} className="m-1 w-auto flex-1"><ArrowLeft /></Button>
-          <Button onClick={swipeRight} className="m-1 w-auto flex-1"><ArrowRight /></Button>
+          {[...cards, ...cards].map((card, i) => (
+            <div key={i} className="relative min-w-[200px] aspect-[9/16] rounded-xl overflow-clip shrink-0">
+              <Image src={card.url} alt={card.artist} fill className="object-cover" unoptimized />
+            </div>
+          ))}
         </motion.div>
       </div>
-    </div >
+    </main>
   )
 }
 
-function ImageSkeleton() {
+function Header() {
   return (
-    <div
-      className="w-full h-full bg-[#0a0a0a] flex justify-center items-center rounded-xl"
-    >
-      <Spinner data-icon="inline-start" className="scale-200" />
-    </div>
+    <header className="fixed inset-x-0 w-screen top-0 z-50 px-8 mx-auto">
+      <div className="mx-auto flex h-16 w-5/5 max-w-5xl items-center justify-between px-4 outline-1 outline-white/10 rounded-xl mt-4 bg-neutral-950/60 backdrop-blur-xl">
+        <Image
+          src="/waifu.png"
+          alt="Waifu"
+          width={125}
+          height={125}
+          className="-mb-3"
+        />
+
+        <Link href={'/swipe'}>
+          <Button ><span className="font-bold text-xl">
+            Start swiping</span></Button>
+        </Link>
+      </div>
+    </header>
   )
 }
