@@ -1,16 +1,14 @@
 'use client'
 
 import Image from "next/image"
-import { useEffect, useState, useCallback } from "react"
-import useEmblaCarousel from 'embla-carousel-react'
+import { useEffect, useState, useRef } from "react"
 import { DotPattern } from "@/components/ui/dot-pattern"
 import { HyperText } from "@/components/ui/hyper-text"
 import { Button } from "@/components/ui/button"
 import { FloatingNav } from "@/components/ui/floating-navbar"
 import { Spinner } from "@/components/ui/spinner"
 import { IconHome, IconMessage, IconUser } from "@tabler/icons-react"
-import { ArrowLeft, ArrowRight } from "lucide-react"
-import { cn } from "@/lib/utils"
+import Link from "next/link"
 
 type WaifuData = {
   results: {
@@ -23,41 +21,25 @@ type WaifuData = {
 }
 
 export default function Home() {
-  const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true })
   const [slides, setSlides] = useState<WaifuData['results']>([])
   const [loading, setLoading] = useState(true)
-  const [selectedIndex, setSelectedIndex] = useState(0)
 
   async function fetchMore() {
     try {
       const res = await fetch('https://nekos.best/api/v2/waifu')
       const data: WaifuData = await res.json()
-      setSlides(prev => [...prev, ...data.results])
+      setSlides(prev => {
+        const existingUrls = new Set(prev.map(s => s.url))
+        const newSlides = data.results.filter(s => !existingUrls.has(s.url))
+        return [...prev, ...newSlides]
+      })
       setLoading(false)
-    } catch {}
+    } catch { }
   }
 
   useEffect(() => {
     fetchMore()
   }, [])
-
-  const onSelect = useCallback(() => {
-    if (!emblaApi) return
-    setSelectedIndex(emblaApi.selectedScrollSnap())
-    if (slides.length - emblaApi.selectedScrollSnap() < 4) {
-      fetchMore()
-    }
-  }, [emblaApi, slides.length])
-
-  useEffect(() => {
-    if (emblaApi) {
-      emblaApi.on('select', onSelect)
-      onSelect()
-    }
-  }, [emblaApi, onSelect])
-
-  const scrollPrev = useCallback(() => emblaApi?.scrollPrev(), [emblaApi])
-  const scrollNext = useCallback(() => emblaApi?.scrollNext(), [emblaApi])
 
   return (
     <div className="relative min-h-screen flex flex-col items-center overflow-hidden">
@@ -67,7 +49,7 @@ export default function Home() {
         <FloatingNav navItems={navItems} />
       </div>
 
-      <section className="relative z-10 flex flex-col items-center gap-6 pt-40 pb-16 px-4">
+      <section className="relative z-10 flex flex-col items-center gap-6 pt-40 pb-16 px-4 min-h-screen justify-center">
         <HyperText
           as="h1"
           className="text-5xl md:text-7xl font-bold text-center bg-linear-to-r from-white to-neutral-400 bg-clip-text text-transparent"
@@ -78,85 +60,60 @@ export default function Home() {
         <p className="text-lg text-neutral-400 text-center max-w-md">
           Infinite waifus. Zero wait. Every swipe is pre-loaded.
         </p>
-        <Button
-          size="lg"
-          onClick={() =>
-            document.getElementById('carousel')?.scrollIntoView({ behavior: 'smooth' })
-          }
-        >
-          Get Swiping
-        </Button>
+        <Link href={"/swipe"}>
+          <Button
+            size="lg"
+          //          onClick={() =>
+          //           document.getElementById('marquee')?.scrollIntoView({ behavior: 'smooth' })
+          //        }
+          >
+            Get Swiping
+          </Button>
+        </Link>
       </section>
 
-      <section
-        id="carousel"
-        className="relative z-10 w-full max-w-lg px-4 pb-32"
-      >
-        <div className="relative rounded-2xl overflow-hidden border border-neutral-800">
-          <div ref={emblaRef}>
-            <div className="flex">
-              {loading ? (
-                <div className="flex-[0_0_100%] min-w-0 aspect-[9/16] bg-neutral-900 flex items-center justify-center rounded-2xl">
-                  <Spinner className="scale-150" />
-                </div>
-              ) : (
-                slides.map((slide) => (
-                  <div
-                    key={slide.url}
-                    className="flex-[0_0_100%] min-w-0 relative aspect-[9/16]"
-                  >
-                    <Image
-                      src={slide.url}
-                      alt={slide.artist_name}
-                      fill
-                      className="object-cover"
-                      unoptimized
-                    />
-                    <div className="absolute inset-0 bg-linear-to-t from-black/60 to-transparent" />
-                    <div className="absolute bottom-0 left-0 p-6">
-                      <p className="text-white font-semibold text-lg">
-                        {slide.artist_name}
-                      </p>
-                    </div>
-                  </div>
-                ))
-              )}
+      <section id="marquee" className="relative z-10 w-full pb-32">
+        {loading ? (
+          <div className="flex justify-center py-32">
+            <Spinner className="scale-150" />
+          </div>
+        ) : (
+          <Marquee images={slides} />
+        )}
+      </section>
+    </div>
+  )
+}
+
+function Marquee({ images }: { images: WaifuData['results'] }) {
+  const doubled = [...images, ...images]
+
+  return (
+    <div className="w-full overflow-hidden [mask-image:linear-gradient(to_right,transparent,black_5%,black_95%,transparent)]">
+      <div className="flex gap-4 animate-marquee w-max">
+        {doubled.map((slide, i) => (
+          <div
+            key={`${slide.url}-${i}`}
+            className="relative w-48 h-72 flex-shrink-0 rounded-xl overflow-hidden border border-neutral-800"
+          >
+            <Image
+              src={slide.url}
+              alt={slide.artist_name}
+              fill
+              className="object-cover"
+              sizes="192px"
+              unoptimized
+              loading="lazy"
+            />
+            <div className="absolute inset-0 bg-linear-to-t from-black/60 to-transparent" />
+            <div className="absolute bottom-0 left-0 p-3">
+              <p className="text-white text-xs font-medium truncate max-w-40">
+                {slide.artist_name}
+              </p>
             </div>
           </div>
-
-          {slides.length > 0 && (
-            <>
-              <button
-                onClick={scrollPrev}
-                className="absolute left-3 top-1/2 -translate-y-1/2 z-20 rounded-full bg-black/60 p-2 text-white hover:bg-black/80 transition-colors"
-              >
-                <ArrowLeft className="h-5 w-5" />
-              </button>
-              <button
-                onClick={scrollNext}
-                className="absolute right-3 top-1/2 -translate-y-1/2 z-20 rounded-full bg-black/60 p-2 text-white hover:bg-black/80 transition-colors"
-              >
-                <ArrowRight className="h-5 w-5" />
-              </button>
-
-              <div className="absolute bottom-16 left-1/2 -translate-x-1/2 z-20 flex gap-2">
-                {slides.map((_, i) => (
-                  <button
-                    key={i}
-                    className={cn(
-                      "h-2 rounded-full transition-all",
-                      i === selectedIndex
-                        ? "w-6 bg-white"
-                        : "w-2 bg-white/50 hover:bg-white/80"
-                    )}
-                    onClick={() => emblaApi?.scrollTo(i)}
-                  />
-                ))}
-              </div>
-            </>
-          )}
-        </div>
-      </section>
+        ))}
+      </div>
     </div>
   )
 }
