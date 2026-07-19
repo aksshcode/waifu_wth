@@ -1,139 +1,154 @@
 'use client'
 
 import Image from "next/image"
-import { useEffect, useState, useRef } from "react"
+import { useEffect, useState } from "react"
+import { motion } from "motion/react"
 import { DotPattern } from "@/components/ui/dot-pattern"
 import { HyperText } from "@/components/ui/hyper-text"
 import { Button } from "@/components/ui/button"
 import { FloatingNav } from "@/components/ui/floating-navbar"
 import { Spinner } from "@/components/ui/spinner"
 import { IconHome, IconMessage, IconUser } from "@tabler/icons-react"
-import Link from "next/link"
+import { ArrowLeft, ArrowRight } from "lucide-react"
+
+type WaifuImage = {
+  url: string
+  source_url: string
+  artist_name: string
+}
 
 type WaifuData = {
-  results: {
-    artist_name: string
-    artist_href: string
-    source_url: string
-    url: string
-    dimensions: { width: number; height: number }
-  }[]
+  images: WaifuImage[]
 }
 
 export default function Home() {
-  const [slides, setSlides] = useState<WaifuData['results']>([])
-  const [loading, setLoading] = useState(true)
+  const [fetchStatus, setFetchStatus] = useState<"success" | "loading" | "failed">("loading")
+  const [imgData, setImgData] = useState<WaifuImage>()
+  const [nextImgData, setNextImgData] = useState<WaifuImage>()
+  const [swipeDirection, setSwipeDirection] = useState<"left" | "right" | null>(null)
+  const [swipeKey, setSwipeKey] = useState(0)
 
-  async function fetchMore() {
+  const imageName = imgData?.artist_name ?? "loading"
+
+  async function getImgData(fromSwipe = false) {
     try {
-      const res = await fetch('https://nekos.best/api/v2/waifu')
+      const res = await fetch('https://waifu.im/api?size=small')
       const data: WaifuData = await res.json()
-      setSlides(prev => {
-        const existingUrls = new Set(prev.map(s => s.url))
-        const newSlides = data.results.filter(s => !existingUrls.has(s.url))
-        return [...prev, ...newSlides]
-      })
-      setLoading(false)
-    } catch { }
+      setImgData(data.images[0])
+      setFetchStatus("success")
+      setSwipeDirection(null)
+      if (fromSwipe) setSwipeKey(prev => prev + 1)
+    } catch {
+      setSwipeDirection(null)
+      setFetchStatus("failed")
+    }
+  }
+
+  async function getNextImgData() {
+    try {
+      const res = await fetch('https://waifu.im/api?size=small')
+      const data: WaifuData = await res.json()
+      setNextImgData(data.images[0])
+      setImgData(prev => prev ?? data.images[0])
+    } catch {}
   }
 
   useEffect(() => {
-    fetchMore()
+    getImgData()
+    getNextImgData()
+    function handleKey(e: KeyboardEvent) {
+      if (e.key === "ArrowLeft") swipeLeft()
+      if (e.key === "ArrowRight") swipeRight()
+    }
+    window.addEventListener("keydown", handleKey)
+    return () => window.removeEventListener("keydown", handleKey)
   }, [])
 
+  function swipeLeft() {
+    if (!swipeDirection) setSwipeDirection("left")
+  }
+  function swipeRight() {
+    if (!swipeDirection) setSwipeDirection("right")
+  }
+
   return (
-    <div className="relative min-h-screen flex flex-col items-center overflow-hidden">
+    <div className="relative w-full h-screen flex flex-col items-center justify-center overflow-hidden">
       <DotPattern glow className="opacity-15" />
 
       <div className="fixed top-0 left-0 w-full z-50">
         <FloatingNav navItems={navItems} />
       </div>
 
-      <section className="relative z-10 flex flex-col items-center gap-6 pt-40 pb-16 px-4 min-h-screen justify-center">
-        <HyperText
-          as="h1"
-          className="text-5xl md:text-7xl font-bold text-center bg-linear-to-r from-white to-neutral-400 bg-clip-text text-transparent"
-          duration={1000}
+      <div className="relative z-10 flex flex-col items-center gap-4">
+        <motion.div
+          key={swipeKey}
+          initial={{ filter: "blur(2px)", scale: 0.25, opacity: 0 }}
+          animate={
+            swipeDirection === "right"
+              ? { filter: "blur(0px)", scale: 1, opacity: 0, x: 600 }
+              : swipeDirection === "left"
+                ? { filter: "blur(0px)", scale: 1, opacity: 0, x: -600 }
+                : { filter: "blur(0px)", scale: 1, opacity: 1, x: 0 }
+          }
+          transition={{ x: { duration: 0.15 }, opacity: { duration: 0.15 } }}
+          drag="x"
+          onDragEnd={(_, info) => {
+            if (info.offset.x > 100) setSwipeDirection("right")
+            else if (info.offset.x < -100) setSwipeDirection("left")
+            else setSwipeDirection(null)
+          }}
+          onAnimationComplete={() => {
+            if (swipeDirection) {
+              setImgData(nextImgData)
+              getNextImgData()
+              setSwipeKey(prev => prev + 1)
+              setSwipeDirection(null)
+            }
+          }}
+          dragSnapToOrigin={!swipeDirection}
+          className="relative rounded-xl overflow-clip w-[85vw] max-w-[450px] aspect-[9/16]"
         >
-          Discover Waifus
-        </HyperText>
-        <p className="text-lg text-neutral-400 text-center max-w-md">
-          Infinite waifus. Zero wait. Every swipe is pre-loaded.
-        </p>
-        <Link href={"/swipe"}>
-          <Button
-            size="lg"
-          //          onClick={() =>
-          //           document.getElementById('marquee')?.scrollIntoView({ behavior: 'smooth' })
-          //        }
-          >
-            Get Swiping
-          </Button>
-        </Link>
-      </section>
-
-      <section id="marquee" className="relative z-10 w-full pb-32">
-        {loading ? (
-          <div className="flex justify-center py-32">
-            <Spinner className="scale-150" />
-          </div>
-        ) : (
-          <Marquee images={slides} />
-        )}
-      </section>
-    </div>
-  )
-}
-
-function Marquee({ images }: { images: WaifuData['results'] }) {
-  const doubled = [...images, ...images]
-
-  return (
-    <div className="w-full overflow-hidden [mask-image:linear-gradient(to_right,transparent,black_5%,black_95%,transparent)]">
-      <div className="flex gap-4 animate-marquee w-max">
-        {doubled.map((slide, i) => (
-          <div
-            key={`${slide.url}-${i}`}
-            className="relative w-48 h-72 flex-shrink-0 rounded-xl overflow-hidden border border-neutral-800"
-          >
+          {fetchStatus === "loading" ? (
+            <ImageSkeleton />
+          ) : (
             <Image
-              src={slide.url}
-              alt={slide.artist_name}
+              src={imgData?.url ?? ''}
+              alt={imageName}
               fill
               className="object-cover"
-              sizes="192px"
+              priority
               unoptimized
-              loading="lazy"
             />
-            <div className="absolute inset-0 bg-linear-to-t from-black/60 to-transparent" />
-            <div className="absolute bottom-0 left-0 p-3">
-              <p className="text-white text-xs font-medium truncate max-w-40">
-                {slide.artist_name}
-              </p>
-            </div>
+          )}
+          <div className="inset-0 absolute bg-linear-to-t from-black to-transparent" />
+          <div className="absolute bottom-0 left-0 m-5 text-white font-semibold">
+            {imageName}
           </div>
-        ))}
+        </motion.div>
+
+        <motion.div
+          initial={{ filter: "blur(2px)", x: -10, opacity: 0 }}
+          animate={{ filter: "blur(0px)", x: 0, opacity: 1 }}
+          className="w-full flex flex-row gap-2"
+        >
+          <Button onClick={swipeLeft} className="flex-1"><ArrowLeft /></Button>
+          <Button onClick={swipeRight} className="flex-1"><ArrowRight /></Button>
+        </motion.div>
       </div>
     </div>
   )
 }
 
+function ImageSkeleton() {
+  return (
+    <div className="w-full h-full bg-[#0a0a0a] flex items-center justify-center rounded-xl">
+      <Spinner className="scale-200" />
+    </div>
+  )
+}
+
 const navItems = [
-  {
-    name: "Home",
-    link: "/",
-    icon: <IconHome className="h-4 w-4 text-neutral-500 dark:text-white" />,
-  },
-  {
-    name: "About",
-    link: "#about",
-    icon: <IconUser className="h-4 w-4 text-neutral-500 dark:text-white" />,
-  },
-  {
-    name: "Contact",
-    link: "#contact",
-    icon: (
-      <IconMessage className="h-4 w-4 text-neutral-500 dark:text-white" />
-    ),
-  },
+  { name: "Home", link: "/", icon: <IconHome className="h-4 w-4 text-neutral-500 dark:text-white" /> },
+  { name: "About", link: "#about", icon: <IconUser className="h-4 w-4 text-neutral-500 dark:text-white" /> },
+  { name: "Contact", link: "#contact", icon: <IconMessage className="h-4 w-4 text-neutral-500 dark:text-white" /> },
 ]
