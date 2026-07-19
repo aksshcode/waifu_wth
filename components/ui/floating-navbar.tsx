@@ -1,4 +1,5 @@
 // Original scroll-hide version saved as floating-navbar.tsx.bak
+import React from "react";
 import { cn } from "@/lib/utils";
 
 export const FloatingNav = ({
@@ -8,7 +9,7 @@ export const FloatingNav = ({
   navItems: {
     name: string;
     link: string;
-    icon?: JSX.Element;
+    icon?: React.ReactNode;
   }[];
   className?: string;
 }) => {
