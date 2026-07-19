@@ -93,6 +93,7 @@ export default function Home() {
               setImgData(nextImgData)
               getNextImgData()
               setSwipeKey(prev => prev + 1)
+              setSwipeDirection(null)
             }
           }}
           dragSnapToOrigin={!swipeDirection}
