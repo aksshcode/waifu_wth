@@ -21,49 +21,33 @@ export default function Home() {
   const [nextImgData, setNextImgData] = useState<WaifuData>()
   const imageData = imgData?.results[0]
   const imageName = imageData?.artist_name ?? "loading"
-
-  async function fetchOne(): Promise<WaifuData> {
-    const res = await fetch('https://nekos.best/api/v2/waifu')
-    return await res.json()
-  }
-
-  async function getImgData(fromSwipe = false) {
+  async function getImgData(fromSwipe?: boolean) {
     try {
-      const data = await fetchOne()
+      const res = await fetch('https://nekos.best/api/v2/waifu')
+      const data = await res.json()
       setImgData(data)
-      setFetchStatus("success")
       setSwipeDirection(null)
+      setFetchStatus("success")
       if (fromSwipe) setSwipeKey(prev => prev + 1)
-      fetchNext()
     } catch {
       setSwipeDirection(null)
       setFetchStatus("failed")
     }
   }
-
-  async function fetchNext() {
+  async function getNextImgData(fromSwipe?: boolean) {
     try {
-      const data = await fetchOne()
-      const img = new Image()
-      img.src = data.results[0].url
+      const res = await fetch('https://nekos.best/api/v2/waifu')
+      const data = await res.json()
       setNextImgData(data)
-    } catch {}
-  }
-
-  function promoteNext() {
-    if (nextImgData) {
-      setImgData(nextImgData)
-      setNextImgData(undefined)
-      setSwipeKey(prev => prev + 1)
-      setSwipeDirection(null)
-      fetchNext()
-    } else {
-      getImgData(true)
+      setImgData(prev => prev ?? data)
+    } catch {
+      // fail silently
     }
   }
   const [swipeDirection, setSwipeDirection] = useState<"left" | "right" | null>(null)
   useEffect(() => {
     getImgData()
+    getNextImgData()
     function handleKey(e: KeyboardEvent) {
       if (e.key === "ArrowLeft") swipeLeft()
       if (e.key === "ArrowRight") swipeRight()
@@ -104,7 +88,9 @@ export default function Home() {
           }}
           onAnimationComplete={() => {
             if (swipeDirection) {
-              promoteNext()
+              setImgData(nextImgData)
+              getNextImgData()
+              setSwipeKey(prev => prev + 1)
             }
           }}
           dragSnapToOrigin={!swipeDirection}
