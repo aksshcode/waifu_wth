@@ -40,6 +40,8 @@ export default function Home() {
       const data = await res.json()
       setNextImgData(data)
       setImgData(prev => prev ?? data)
+      setSwipeDirection(null)
+      // setSwipeKey(prev => prev + 1)
     } catch {
       // fail silently
     }
