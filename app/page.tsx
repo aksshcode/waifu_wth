@@ -11,30 +11,31 @@ import { Spinner } from "@/components/ui/spinner"
 import { IconHome, IconMessage, IconUser } from "@tabler/icons-react"
 import { ArrowLeft, ArrowRight } from "lucide-react"
 
-type WaifuImage = {
-  url: string
-  source_url: string
-  artist_name: string
-}
-
 type WaifuData = {
-  images: WaifuImage[]
+  results: {
+    artist_name: string
+    artist_href: string
+    source_url: string
+    url: string
+    dimensions: { width: number; height: number }
+  }[]
 }
 
 export default function Home() {
   const [fetchStatus, setFetchStatus] = useState<"success" | "loading" | "failed">("loading")
-  const [imgData, setImgData] = useState<WaifuImage>()
-  const [nextImgData, setNextImgData] = useState<WaifuImage>()
+  const [imgData, setImgData] = useState<WaifuData>()
+  const [nextImgData, setNextImgData] = useState<WaifuData>()
   const [swipeDirection, setSwipeDirection] = useState<"left" | "right" | null>(null)
   const [swipeKey, setSwipeKey] = useState(0)
 
-  const imageName = imgData?.artist_name ?? "loading"
+  const imageData = imgData?.results[0]
+  const imageName = imageData?.artist_name ?? "loading"
 
   async function getImgData(fromSwipe = false) {
     try {
-      const res = await fetch('https://waifu.im/api?size=small')
+      const res = await fetch('https://nekos.best/api/v2/waifu')
       const data: WaifuData = await res.json()
-      setImgData(data.images[0])
+      setImgData(data)
       setFetchStatus("success")
       setSwipeDirection(null)
       if (fromSwipe) setSwipeKey(prev => prev + 1)
@@ -46,10 +47,10 @@ export default function Home() {
 
   async function getNextImgData() {
     try {
-      const res = await fetch('https://waifu.im/api?size=small')
+      const res = await fetch('https://nekos.best/api/v2/waifu')
       const data: WaifuData = await res.json()
-      setNextImgData(data.images[0])
-      setImgData(prev => prev ?? data.images[0])
+      setNextImgData(data)
+      setImgData(prev => prev ?? data)
     } catch {}
   }
 
@@ -108,11 +109,11 @@ export default function Home() {
           dragSnapToOrigin={!swipeDirection}
           className="relative rounded-xl overflow-clip w-[85vw] max-w-[450px] aspect-[9/16]"
         >
-          {fetchStatus === "loading" ? (
+          {fetchStatus === "loading" || !imgData?.results[0]?.url ? (
             <ImageSkeleton />
           ) : (
             <Image
-              src={imgData?.url ?? ''}
+              src={imgData.results[0].url}
               alt={imageName}
               fill
               className="object-cover"

@@ -26,7 +26,7 @@ export default function Home() {
   async function getImgData(fromSwipe?: boolean) {
     try {
       const res = await fetch('https://nekos.best/api/v2/waifu')
-      const data = await res.json()
+      const data: WaifuData = await res.json()
       setImgData(data)
       setSwipeDirection(null)
       setFetchStatus("success")
@@ -36,17 +36,13 @@ export default function Home() {
       setFetchStatus("failed")
     }
   }
-  async function getNextImgData(fromSwipe?: boolean) {
+  async function getNextImgData() {
     try {
       const res = await fetch('https://nekos.best/api/v2/waifu')
-      const data = await res.json()
+      const data: WaifuData = await res.json()
       setNextImgData(data)
       setImgData(prev => prev ?? data)
-      setSwipeDirection(null)
-      // setSwipeKey(prev => prev + 1)
-    } catch {
-      // fail silently
-    }
+    } catch {}
   }
   const [swipeDirection, setSwipeDirection] = useState<"left" | "right" | null>(null)
   useEffect(() => {
@@ -101,10 +97,10 @@ export default function Home() {
           }}
           dragSnapToOrigin={!swipeDirection}
           className="relative rounded-xl overflow-clip w-[85vw] max-w-[450px] aspect-[9/16]">
-          {fetchStatus === "loading" ? <ImageSkeleton /> :
+          {fetchStatus === "loading" || !imageData?.url ? <ImageSkeleton /> :
             <Image
-              src={imageData?.url ?? 'https://picsum.photos/seed/picsum/200/300'}
-              alt="waifu image" fill className="object-cover" priority unoptimized />
+              src={imageData.url}
+              alt={imageName} fill className="object-cover" priority unoptimized />
           }
           <div className="inset-0 absolute bg-linear-to-t from-black to-transparent" />
           <div className="absolute bottom-0 left-0 m-5">
