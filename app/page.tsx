@@ -18,18 +18,47 @@ export default function Home() {
   }
   const [fetchStatus, setFetchStatus] = useState<"success" | "loading" | "failed">("loading")
   const [imgData, setImgData] = useState<WaifuData>()
+  const [nextImgData, setNextImgData] = useState<WaifuData>()
   const imageData = imgData?.results[0]
   const imageName = imageData?.artist_name ?? "loading"
-  async function getImgData() {
+
+  async function fetchOne(): Promise<WaifuData> {
+    const res = await fetch('https://nekos.best/api/v2/waifu')
+    return await res.json()
+  }
+
+  async function getImgData(fromSwipe = false) {
     try {
-      const res = await fetch('https://nekos.best/api/v2/waifu')
-      const data = await res.json()
+      const data = await fetchOne()
       setImgData(data)
-      setSwipeDirection(null)
       setFetchStatus("success")
+      setSwipeDirection(null)
+      if (fromSwipe) setSwipeKey(prev => prev + 1)
+      fetchNext()
     } catch {
       setSwipeDirection(null)
       setFetchStatus("failed")
+    }
+  }
+
+  async function fetchNext() {
+    try {
+      const data = await fetchOne()
+      const img = new Image()
+      img.src = data.results[0].url
+      setNextImgData(data)
+    } catch {}
+  }
+
+  function promoteNext() {
+    if (nextImgData) {
+      setImgData(nextImgData)
+      setNextImgData(undefined)
+      setSwipeKey(prev => prev + 1)
+      setSwipeDirection(null)
+      fetchNext()
+    } else {
+      getImgData(true)
     }
   }
   const [swipeDirection, setSwipeDirection] = useState<"left" | "right" | null>(null)
@@ -42,7 +71,7 @@ export default function Home() {
     window.addEventListener("keydown", handleKey)
     return () => window.removeEventListener("keydown", handleKey)
   }, [])
-
+  const [swipeKey, setSwipeKey] = useState<number>(0)
   function swipeLeft() {
     if (!swipeDirection) {
       setSwipeDirection("left")
@@ -57,7 +86,7 @@ export default function Home() {
     <div className="w-full h-screen flex-1 flex flex-col justify-center p-4 items-center ">
       <div className="flex flex-col gap-4">
         <motion.div
-          key={imageData?.url ?? "loading"}
+          key={swipeKey}
           initial={{ filter: "blur(2px)", scale: 0.25, opacity: 0 }}
           animate={
             swipeDirection === "right"
@@ -75,7 +104,7 @@ export default function Home() {
           }}
           onAnimationComplete={() => {
             if (swipeDirection) {
-              getImgData()
+              promoteNext()
             }
           }}
           dragSnapToOrigin={!swipeDirection}
@@ -106,9 +135,9 @@ export default function Home() {
 function ImageSkeleton() {
   return (
     <div
-      className="w-full h-full bg-[#0a0a0a] rounded-xl"
+      className="w-full h-full bg-[#0a0a0a] flex justify-center items-center rounded-xl"
     >
-      <Spinner data-icon="inline-start" />
+      <Spinner data-icon="inline-start" className="scale-200" />
     </div>
   )
 }
